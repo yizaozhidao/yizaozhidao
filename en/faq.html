@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <title>FAQ </title>
+<meta charset="utf-8">
+<meta name="description" content>
+<meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="icon" href="/images/favicon.png" type="image/x-icon">
+
+
+<link rel="stylesheet" href="/css/index.css">
+
+
+
+
+</head>
+<body>
+  <div class="nav">
+  <header>
+    <a href="/" class="nav-logo" alt="nodeui">
+    <img src="/images/logo.png" width="89"><span>益早知道</span>
+    </a>
+    <ul class="nav-item">
+      <li>
+        <form id="search-form">
+          <input type="text" id="search-query" class="search-query st-default-search-input">
+        </form>
+      </li>
+      <li><a href="/docs/intro/" alt="Guide" class>Guide</a></li><li><a href="/page/process.html" alt="接入流程" class>接入流程</a></li><li><a href="/page/user.html" alt="Case" class>Case</a></li><li><a href="/fekey/index.html" alt="加入我们" class>加入我们</a></li>
+
+      
+      
+      
+      
+    </ul>
+    <a id="mobileTrigger" href="#" class="mobile-trigger">
+      <ul>
+        <li></li>
+        <li></li>
+        <li></li>
+      </ul>
+    </a>
+  </header>
+</div>
+
+  <div id="container">
+    <div class="page-main">
+  <article class="markdown-body">
+    <h1>FAQ</h1>
+    <p>If you have questions that is not contained below, please check <a href="https://github.com/eggjs/egg/issues" target="_blank" rel="noopener">Egg issues</a>.</p>
+<h2 id="why-my-config-dont-work"><a class="markdown-anchor" href="#why-my-config-dont-work">#</a> Why my config don't work ?</h2>
+<p>Framework <a href="./basics/config.html">Config</a> settings is powerfull, support different environments and different places(framework, plugins, app).</p>
+<p>When you got some trouble, and want to find out what is the final config using at runtime, you can checkout <code>run/application_config.json</code> and <code>run/agent_config.json</code>.</p>
+<h2 id="why-not-choose-pm2-as-process-management-tool"><a class="markdown-anchor" href="#why-not-choose-pm2-as-process-management-tool">#</a> Why not choose PM2 as process management tool?</h2>
+<ol>
+<li>PM2 itself is too complex to issue problems if any.</li>
+<li>Deep optimization could be difficlut to achieve if choosing PM2.</li>
+<li>Pattern like one leader process communicating with remote services, along with serveral follower processes delegating request to it (<a href="./core/cluster-and-ipc.html">Cluster</a>), is a rigid demand for reducing connections and data exchange load, espeically when facing applications in very large scale. egg originates from Ant Financial Group and Alibaba Group, we start with applications in that scale at first, so we take these goals into consideration. All of these goals above could be hard to achieve with PM2.</li>
+</ol>
+<p>Process management is very important. It defines the way we write code, meanwhile relates to deep runtime optimizations. So we think it's better included in framework itself.</p>
+<p><strong>How to start application with PM2?</strong></p>
+<p>Although PM2 is not recommanded, you can use it anyway.</p>
+<p>Firstly, put a start file in the root directory of your project:</p>
+<p><figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="comment">// server.js</span></span><br><span class="line"><span class="keyword">const</span> egg = <span class="built_in">require</span>(<span class="string">'egg'</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> workers = <span class="built_in">Number</span>(process.argv[<span class="number">2</span>] || <span class="built_in">require</span>(<span class="string">'os'</span>).cpus().length);</span><br><span class="line">egg.startCluster(&#123;</span><br><span class="line">  workers,</span><br><span class="line">  baseDir: __dirname,</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure></p>
+<p>We can start application with PM2 like this:</p>
+<p><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">pm2 start server.js</span><br></pre></td></tr></table></figure></p>
+<h2 id="how-to-resolve-csrf-error"><a class="markdown-anchor" href="#how-to-resolve-csrf-error">#</a> How to resolve csrf error?</h2>
+<p>There are two kinds of common csrf errors:</p>
+<ul>
+<li><code>missing csrf token</code></li>
+<li><code>invalid csrf token</code></li>
+</ul>
+<p>By default <a href="https://github.com/eggjs/egg-security/" target="_blank" rel="noopener">egg-security</a> plugin built in Egg requires CSRF validation against all 'unsafe' request such as <code>POST</code>, <code>PUT</code>, <code>DELETE</code> requests.</p>
+<p>The error will disappear in the presence of correct csrf token in request. For more implentation details, see [./core/security.md#csrf].</p>
+
+  </article>
+  
+  <aside id="mobileAside" class="toc">
+  <div class="mobile-menu">
+    
+    <ul><li><a href="/docs/intro/" alt="Guide" class>Guide</a></li><li><a href="/page/process.html" alt="接入流程" class>接入流程</a></li><li><a href="/page/user.html" alt="Case" class>Case</a></li><li><a href="/fekey/index.html" alt="加入我们" class>加入我们</a></li></ul>
+  </div>
+  <dl></dl>
+</aside>
+<script src="/js/mobile-aside.js"></script>
+
+</div>
+
+  </div>
+</body>
+<!-- <script src="https://cdn.jsdelivr.net/docsearch.js/2/docsearch.min.js"></script>
+<script> 
+docsearch({
+  apiKey: '1561de31a86f79507ea00cdb54ce647c',
+  indexName: 'eggjs',
+  inputSelector: '#search-query',
+  // debug: true // Set debug to true if you want to inspect the dropdown
+});
+</script> -->
+</html>

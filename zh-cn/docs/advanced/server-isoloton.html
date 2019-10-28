@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <title>主要工作 </title>
+<meta charset="utf-8">
+<meta name="description" content>
+<meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="icon" href="/images/favicon.png" type="image/x-icon">
+
+
+<link rel="stylesheet" href="/css/index.css">
+
+
+
+
+</head>
+<body>
+  <div class="nav">
+  <header>
+    <a href="/zh-cn/" class="nav-logo" alt="nodeui">
+    <img src="/images/logo.png" width="89"><span>益早知道</span>
+    </a>
+    <ul class="nav-item">
+      <li>
+        <form id="search-form">
+          <input type="text" id="search-query" class="search-query st-default-search-input">
+        </form>
+      </li>
+      <li><a href="/zh-cn/docs/intro/" alt="应用介绍" class>应用介绍</a></li><li><a href="/zh-cn/page/process.html" alt="开放API" class>开放API</a></li><li><a href="/zh-cn/page/user.html" alt="使用案例" class>使用案例</a></li><li><a href="/zh-cn/fekey/index.html" alt="加入我们" class>加入我们</a></li>
+
+      
+      
+      
+      
+    </ul>
+    <a id="mobileTrigger" href="#" class="mobile-trigger">
+      <ul>
+        <li></li>
+        <li></li>
+        <li></li>
+      </ul>
+    </a>
+  </header>
+</div>
+
+  <div id="container">
+    <div class="page-main">
+  <article class="markdown-body">
+    <h1>主要工作</h1>
+    <p>通过PM2拆分服务，确保不同服务相互不受影响。</p>
+<h3 id="1-改造现有pm2json支持多app启动"><a class="markdown-anchor" href="#1-改造现有pm2json支持多app启动">#</a> 1. 改造现有<code>pm2.json</code>，支持多app启动</h3>
+<p>根据当前公有云Node集群现状（机器均为24核），拆分为两个独立服务：</p>
+<ul>
+<li><code>nuomi</code>: 承载糯米组件流量，端口为<code>8197</code>，实例数为14</li>
+<li><code>h5</code>: 承载所有h5模块渲染流量，端口为<code>8198</code>,实例数为10</li>
+</ul>
+<p><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    &quot;apps&quot;: [&#123;</span><br><span class="line">        &quot;exec_interpreter&quot;: &quot;node&quot;,</span><br><span class="line">        &quot;name&quot;: &quot;nuomi&quot;,</span><br><span class="line">        &quot;exec_mode&quot;: &quot;cluster_mode&quot;,</span><br><span class="line">        &quot;instances&quot;: &quot;14&quot;,</span><br><span class="line">        &quot;max_memory_restart&quot;: &quot;500M&quot;,</span><br><span class="line">        &quot;merge_logs&quot;: false,</span><br><span class="line">        &quot;script&quot;: &quot;app.js&quot;,</span><br><span class="line">        &quot;ignoreWatch&quot;: [&quot;pm2&quot;, &quot;log&quot;, &quot;node_modules&quot;],</span><br><span class="line">        &quot;env&quot;: &#123;</span><br><span class="line">            &quot;NODE_ENV&quot;: &quot;production&quot;,</span><br><span class="line">            &quot;PM2_GRACEFUL_TIMEOUT&quot;: 1000,</span><br><span class="line">            &quot;PORT&quot;: 8197,</span><br><span class="line">            &quot;DEBUG&quot;: true</span><br><span class="line">        &#125;,</span><br><span class="line">        &quot;env_dev&quot;: &#123;</span><br><span class="line">            &quot;NODE_ENV&quot;: &quot;development&quot;,</span><br><span class="line">            &quot;DEBUG&quot;: true</span><br><span class="line">        &#125;,</span><br><span class="line">        &quot;env_test&quot;: &#123;</span><br><span class="line">            &quot;NODE_ENV&quot;: &quot;qa&quot;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;, &#123;</span><br><span class="line">        &quot;exec_interpreter&quot;: &quot;node&quot;,</span><br><span class="line">        &quot;name&quot;: &quot;h5&quot;,</span><br><span class="line">        &quot;exec_mode&quot;: &quot;cluster_mode&quot;,</span><br><span class="line">        &quot;instances&quot;: &quot;10&quot;,</span><br><span class="line">        &quot;max_memory_restart&quot;: &quot;500M&quot;,</span><br><span class="line">        &quot;merge_logs&quot;: false,</span><br><span class="line">        &quot;script&quot;: &quot;app.js&quot;,</span><br><span class="line">        &quot;ignoreWatch&quot;: [&quot;pm2&quot;, &quot;log&quot;, &quot;node_modules&quot;],</span><br><span class="line">        &quot;env&quot;: &#123;</span><br><span class="line">            &quot;NODE_ENV&quot;: &quot;production&quot;,</span><br><span class="line">            &quot;PM2_GRACEFUL_TIMEOUT&quot;: 1000,</span><br><span class="line">            &quot;PORT&quot;: 8198,</span><br><span class="line">            &quot;DEBUG&quot;: true</span><br><span class="line">        &#125;,</span><br><span class="line">        &quot;env_dev&quot;: &#123;</span><br><span class="line">            &quot;NODE_ENV&quot;: &quot;development&quot;,</span><br><span class="line">            &quot;DEBUG&quot;: true</span><br><span class="line">        &#125;,</span><br><span class="line">        &quot;env_test&quot;: &#123;</span><br><span class="line">            &quot;NODE_ENV&quot;: &quot;qa&quot;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h3 id="2-改造启动脚本支持业务app独立重启"><a class="markdown-anchor" href="#2-改造启动脚本支持业务app独立重启">#</a> 2. 改造启动脚本，支持业务APP独立重启</h3>
+<pre><code>nuomi_restart.sh
+h5_restart.sh
+</code></pre>
+<p>命令改造：</p>
+<pre><code>bin/control start  // 开启所有服务
+bin/control stop appname // 关闭某个服务（h5、nuomi）
+bin/control delete appname // 删除某个服务（h5、nuomi）
+bin/control restart appname // 重启某个服务
+bin/control reload appname // 0宕机重启，后续上线重启采用reload方案
+</code></pre>
+<p><img src="http://younth.coding.me/static/nodeui/reload.jpeg" alt="reload"></p>
+<h2 id="上线步骤"><a class="markdown-anchor" href="#上线步骤">#</a> 上线步骤</h2>
+<h3 id="1-上线nodeui服务"><a class="markdown-anchor" href="#1-上线nodeui服务">#</a> 1. 上线NodeUI服务</h3>
+<ul>
+<li>
+<p>上线前先确定线上的服务进程名称</p>
+</li>
+<li>
+<p>涉及底层上线，上线前需要先stop/delete掉老的进程，为确保服务稳定，采用先stop，然后上线新的隔离方案，回归正常后，delete老的服务进程。</p>
+</li>
+<li>
+<p>需要review方案，或者直接OP操作删除老的进程。</p>
+</li>
+<li>
+<p>增加上线模块</p>
+</li>
+<li>
+<p>绑定上线重启脚本</p>
+</li>
+</ul>
+<h3 id="2-上线ng-rewrite-端口"><a class="markdown-anchor" href="#2-上线ng-rewrite-端口">#</a> 2. 上线ng rewrite 端口</h3>
+<ul>
+<li>配置新的vip服务</li>
+<li>修改rewrite</li>
+</ul>
+<p><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">/home/work/odp_cater/webserver/conf/vhost/</span><br></pre></td></tr></table></figure></p>
+<h2 id="重点关注"><a class="markdown-anchor" href="#重点关注">#</a> 重点关注</h2>
+<ul>
+<li>组件业务</li>
+<li>h5业务</li>
+<li>日志（pm2+业务，关注日志是否会错乱）</li>
+<li>服务稳定（Node进程状态）</li>
+</ul>
+<h2 id="回滚方案"><a class="markdown-anchor" href="#回滚方案">#</a> 回滚方案</h2>
+<p>由于目前公有云回滚可能有坑，回滚过程进程应该不会被杀掉，可能有残留进程，需要杀掉。所以最佳回归方式是<strong>覆盖上线</strong>。涉及的模块：</p>
+<ul>
+<li>fly</li>
+<li>runtime</li>
+</ul>
+
+  </article>
+  
+  <aside id="mobileAside" class="toc">
+  <div class="mobile-menu">
+    
+    <ul><li><a href="/zh-cn/docs/intro/" alt="应用介绍" class>应用介绍</a></li><li><a href="/zh-cn/page/process.html" alt="开放API" class>开放API</a></li><li><a href="/zh-cn/page/user.html" alt="使用案例" class>使用案例</a></li><li><a href="/zh-cn/fekey/index.html" alt="加入我们" class>加入我们</a></li></ul>
+  </div>
+  <dl><dt>新手指南</dt><dd><ul><li><a href="/zh-cn/docs/intro/index.html" class>NodeUI 是什么</a></li><li><a href="/zh-cn/docs/intro/quickstart.html" class>快速入门</a></li></ul></dd><dt>基础功能</dt><dd><ul><li><a href="/zh-cn/docs/basics/structure.html" class>目录结构</a></li><li><a href="/zh-cn/docs/basics/router.html" class>路由</a></li><li><a href="/zh-cn/docs/basics/service.html" class>Service</a></li><li><a href="/zh-cn/docs/basics/mock.html" class>数据模拟</a></li></ul></dd><dt>核心功能</dt><dd><ul><li><a href="/zh-cn/docs/core/development.html" class>本地开发</a></li><li><a href="/zh-cn/docs/core/deployment.html" class>应用部署</a></li><li><a href="/zh-cn/docs/core/logger.html" class>日志</a></li><li><a href="/zh-cn/docs/core/view.html" class>模板渲染</a></li><li><a href="/zh-cn/docs/core/runtime.html" class>Runtime</a></li></ul></dd><dt>进阶</dt><dd><ul><li><a href="/zh-cn/docs/advanced/fetch-server.html" class>负载均衡</a></li><li><a href="/zh-cn/docs/advanced/server-isoloton.html" class="cur">服务隔离</a></li></ul></dd><dt>常见问题</dt><dd><ul><li><a href="/zh-cn/docs/faq/deploy.html" class>部署问题</a></li><li><a href="/zh-cn/docs/faq/debug.html" class>Node调试</a></li><li><a href="/zh-cn/docs/faq/wechat.html" class>微信授权</a></li><li><a href="/zh-cn/docs/faq/contributing.html" class>贡献文章</a></li></ul></dd></dl>
+</aside>
+<script src="/js/mobile-aside.js"></script>
+
+</div>
+
+  </div>
+</body>
+<!-- <script src="https://cdn.jsdelivr.net/docsearch.js/2/docsearch.min.js"></script>
+<script> 
+docsearch({
+  apiKey: '1561de31a86f79507ea00cdb54ce647c',
+  indexName: 'eggjs',
+  inputSelector: '#search-query',
+  // debug: true // Set debug to true if you want to inspect the dropdown
+});
+</script> -->
+</html>

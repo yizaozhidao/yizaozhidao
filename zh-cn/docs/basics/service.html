@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <title>Service </title>
+<meta charset="utf-8">
+<meta name="description" content>
+<meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="icon" href="/images/favicon.png" type="image/x-icon">
+
+
+<link rel="stylesheet" href="/css/index.css">
+
+
+
+
+</head>
+<body>
+  <div class="nav">
+  <header>
+    <a href="/zh-cn/" class="nav-logo" alt="nodeui">
+    <img src="/images/logo.png" width="89"><span>益早知道</span>
+    </a>
+    <ul class="nav-item">
+      <li>
+        <form id="search-form">
+          <input type="text" id="search-query" class="search-query st-default-search-input">
+        </form>
+      </li>
+      <li><a href="/zh-cn/docs/intro/" alt="应用介绍" class>应用介绍</a></li><li><a href="/zh-cn/page/process.html" alt="开放API" class>开放API</a></li><li><a href="/zh-cn/page/user.html" alt="使用案例" class>使用案例</a></li><li><a href="/zh-cn/fekey/index.html" alt="加入我们" class>加入我们</a></li>
+
+      
+      
+      
+      
+    </ul>
+    <a id="mobileTrigger" href="#" class="mobile-trigger">
+      <ul>
+        <li></li>
+        <li></li>
+        <li></li>
+      </ul>
+    </a>
+  </header>
+</div>
+
+  <div id="container">
+    <div class="page-main">
+  <article class="markdown-body">
+    <h1>Service</h1>
+    <p>NodeUI 中，使用 <a href="https://github.com/fex-team/node-ral" target="_blank" rel="noopener">node-ral</a> 进行后端服务管理，我们引入后端服务管理层主要是解决以下几个问题:</p>
+<ul>
+<li>后端服务配置统一管理</li>
+<li>封装异常处理、超时重试，提升系统稳定性</li>
+<li>封装日志，便于线上问题追查</li>
+<li>抽象请求协议、数据格式与数据编码，统一用户接口</li>
+</ul>
+<h2 id="主要特征"><a class="markdown-anchor" href="#主要特征">#</a> 主要特征</h2>
+<ul>
+<li>BNS Support</li>
+<li>IDC Support</li>
+<li>json,querystring,form ...</li>
+<li>http/https</li>
+<li>proxy</li>
+<li>Load Balance</li>
+</ul>
+<h2 id="使用-service"><a class="markdown-anchor" href="#使用-service">#</a> 使用 Service</h2>
+<p><code>Fly</code>全局变量下面有<code>ral</code>及<code>ralP</code>两个方法，用于向后发送请求。区别是<code>ralP</code>返回的是一个<code>promise</code>对象。</p>
+<p><figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="built_in">module</span>.exports = &#123;</span><br><span class="line">    getData: <span class="function"><span class="keyword">function</span>(<span class="params">req, tools, params</span>) </span>&#123;</span><br><span class="line">        <span class="keyword">var</span> options = &#123;</span><br><span class="line">            data: params || &#123;&#125;,</span><br><span class="line">            path: <span class="string">'/huodong/gamebase'</span>,</span><br><span class="line">            <span class="comment">//enableMock: true,</span></span><br><span class="line">        &#125;;</span><br><span class="line">        <span class="comment">// ralP 推荐</span></span><br><span class="line">        <span class="keyword">return</span> Fly.ralP(<span class="string">'SHOPUI'</span>, options)</span><br><span class="line">        <span class="comment">// ral</span></span><br><span class="line">        FLy.RAL(serverName, defaultOptions).on(<span class="string">'data'</span>, <span class="function"><span class="keyword">function</span> (<span class="params">data</span>) </span>&#123;</span><br><span class="line">            resolve(data);</span><br><span class="line">        &#125;).on(<span class="string">'error'</span>, <span class="function"><span class="keyword">function</span> (<span class="params">error</span>) </span>&#123;</span><br><span class="line">            reject(error);</span><br><span class="line">        &#125;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="服务配置"><a class="markdown-anchor" href="#服务配置">#</a> 服务配置</h2>
+<p>ral请求的配置目录为<code>fly/conf/ral/config.js</code>，里面主要定义了向后请求的host及port。更改配置即可更新向后请求的服务。</p>
+<p><figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 全局配置 serverName为 SHOPUI</span></span><br><span class="line"><span class="keyword">let</span> serverHost = <span class="string">'waimai.baidu.com'</span>;</span><br><span class="line"><span class="keyword">let</span> serverPort = <span class="number">80</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">// dev配置 serverName为 dev</span></span><br><span class="line"><span class="keyword">const</span> devServerHost = <span class="string">'waimai.baidu.com'</span>;</span><br><span class="line"><span class="keyword">const</span> devServerPort = <span class="number">80</span>;</span><br></pre></td></tr></table></figure></p>
+<h2 id="向后服务通信原理"><a class="markdown-anchor" href="#向后服务通信原理">#</a> 向后服务通信原理</h2>
+<p><img src="http://younth.coding.me/static/nodeui/bns.png" alt="node-php"></p>
+
+  </article>
+  
+  <aside id="mobileAside" class="toc">
+  <div class="mobile-menu">
+    
+    <ul><li><a href="/zh-cn/docs/intro/" alt="应用介绍" class>应用介绍</a></li><li><a href="/zh-cn/page/process.html" alt="开放API" class>开放API</a></li><li><a href="/zh-cn/page/user.html" alt="使用案例" class>使用案例</a></li><li><a href="/zh-cn/fekey/index.html" alt="加入我们" class>加入我们</a></li></ul>
+  </div>
+  <dl><dt>新手指南</dt><dd><ul><li><a href="/zh-cn/docs/intro/index.html" class>NodeUI 是什么</a></li><li><a href="/zh-cn/docs/intro/quickstart.html" class>快速入门</a></li></ul></dd><dt>基础功能</dt><dd><ul><li><a href="/zh-cn/docs/basics/structure.html" class>目录结构</a></li><li><a href="/zh-cn/docs/basics/router.html" class>路由</a></li><li><a href="/zh-cn/docs/basics/service.html" class="cur">Service</a></li><li><a href="/zh-cn/docs/basics/mock.html" class>数据模拟</a></li></ul></dd><dt>核心功能</dt><dd><ul><li><a href="/zh-cn/docs/core/development.html" class>本地开发</a></li><li><a href="/zh-cn/docs/core/deployment.html" class>应用部署</a></li><li><a href="/zh-cn/docs/core/logger.html" class>日志</a></li><li><a href="/zh-cn/docs/core/view.html" class>模板渲染</a></li><li><a href="/zh-cn/docs/core/runtime.html" class>Runtime</a></li></ul></dd><dt>进阶</dt><dd><ul><li><a href="/zh-cn/docs/advanced/fetch-server.html" class>负载均衡</a></li><li><a href="/zh-cn/docs/advanced/server-isoloton.html" class>服务隔离</a></li></ul></dd><dt>常见问题</dt><dd><ul><li><a href="/zh-cn/docs/faq/deploy.html" class>部署问题</a></li><li><a href="/zh-cn/docs/faq/debug.html" class>Node调试</a></li><li><a href="/zh-cn/docs/faq/wechat.html" class>微信授权</a></li><li><a href="/zh-cn/docs/faq/contributing.html" class>贡献文章</a></li></ul></dd></dl>
+</aside>
+<script src="/js/mobile-aside.js"></script>
+
+</div>
+
+  </div>
+</body>
+<!-- <script src="https://cdn.jsdelivr.net/docsearch.js/2/docsearch.min.js"></script>
+<script> 
+docsearch({
+  apiKey: '1561de31a86f79507ea00cdb54ce647c',
+  indexName: 'eggjs',
+  inputSelector: '#search-query',
+  // debug: true // Set debug to true if you want to inspect the dropdown
+});
+</script> -->
+</html>

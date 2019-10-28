@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <title>NodeUI数据模拟中心 </title>
+<meta charset="utf-8">
+<meta name="description" content>
+<meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="icon" href="/images/favicon.png" type="image/x-icon">
+
+
+<link rel="stylesheet" href="/css/index.css">
+
+
+
+
+</head>
+<body>
+  <div class="nav">
+  <header>
+    <a href="/zh-cn/" class="nav-logo" alt="nodeui">
+    <img src="/images/logo.png" width="89"><span>益早知道</span>
+    </a>
+    <ul class="nav-item">
+      <li>
+        <form id="search-form">
+          <input type="text" id="search-query" class="search-query st-default-search-input">
+        </form>
+      </li>
+      <li><a href="/zh-cn/docs/intro/" alt="应用介绍" class>应用介绍</a></li><li><a href="/zh-cn/page/process.html" alt="开放API" class>开放API</a></li><li><a href="/zh-cn/page/user.html" alt="使用案例" class>使用案例</a></li><li><a href="/zh-cn/fekey/index.html" alt="加入我们" class>加入我们</a></li>
+
+      
+      
+      
+      
+    </ul>
+    <a id="mobileTrigger" href="#" class="mobile-trigger">
+      <ul>
+        <li></li>
+        <li></li>
+        <li></li>
+      </ul>
+    </a>
+  </header>
+</div>
+
+  <div id="container">
+    <div class="page-main">
+  <article class="markdown-body">
+    <h1>NodeUI数据模拟中心</h1>
+    <p>数据mock主要分为前端接口的mock（client request）及向后请求的数据mock(server request)。</p>
+<p>其中，前端接口mock表现为 ajax请求。向后请求Mock主要是指nodeui向后请求php接口的mock，这种数据一般用来渲染到模板或者直接接口输出。</p>
+<p>所有的mock均支持热重启，即修改代码不需要重启nodeui，立即生效。</p>
+<h3 id="目录规范"><a class="markdown-anchor" href="#目录规范">#</a> 目录规范</h3>
+<p><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">mock</span><br><span class="line">  ├─ server.conf // 配置中心  </span><br><span class="line">  ├─ common   // 公共接口目录</span><br><span class="line">  │  ├─ dynamic.js  // 动态数据</span><br><span class="line">  │  ├─ sample.json  // 静态json数据</span><br><span class="line">  ├─ ral // nodeui向php请求接口模拟</span><br><span class="line">  │  ├─ hongbao-getmobilebyopenid.js // 微信授权根据openid获取用户信息接口  </span><br><span class="line">  │  ├─ hongbao-updatemobilebyopenid.js // 更新用户信息接口  </span><br><span class="line">  │  ├─ huodong-2016usergrowstoryindex.js // 业务php接口模拟  </span><br><span class="line">  ├─ dumall // 业务接口</span><br><span class="line">  │  ├─ center.js // 小度商城个人中心</span><br><span class="line">  │  ├─ del.json // 删除卡片接口</span><br><span class="line">  ...</span><br></pre></td></tr></table></figure></p>
+<h3 id="前端接口的使用"><a class="markdown-anchor" href="#前端接口的使用">#</a> 前端接口的使用</h3>
+<p>前端接口的mock主要在<code>server.conf</code>里面进行配置</p>
+<h4 id="serverconf-配置语法"><a class="markdown-anchor" href="#serverconf-配置语法">#</a> server.conf 配置语法</h4>
+<pre><code>指令名称 正则规则 目标文件
+</code></pre>
+<ul>
+<li><code>指令名称</code> 支持 rewrite 、 redirect 和 proxy。</li>
+<li><code>正则规则</code> 用来命中需要作假的请求路径</li>
+<li><code>目标文件</code> 设置转发的目标地址，需要配置一个可请求的 url 地址。</li>
+</ul>
+<h4 id="mock-静态假数据"><a class="markdown-anchor" href="#mock-静态假数据">#</a> mock 静态假数据</h4>
+<p><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">rewrite ^\/api\/user$ /mock/sample.json</span><br><span class="line"></span><br><span class="line">// sample.json内容</span><br><span class="line"></span><br><span class="line">&#123;</span><br><span class="line">    &quot;error&quot;: 0,</span><br><span class="line">    &quot;message&quot;: &quot;ok&quot;,</span><br><span class="line">    &quot;data&quot;: &#123;</span><br><span class="line">        &quot;username&quot;: &quot;younth&quot;,</span><br><span class="line">        &quot;uid&quot;: 1,</span><br><span class="line">        &quot;age&quot;: 25,</span><br><span class="line">        &quot;company&quot;: &quot;waimai&quot;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h4 id="mock-动态假数据"><a class="markdown-anchor" href="#mock-动态假数据">#</a> mock 动态假数据</h4>
+<blockquote>
+<p>node 服务器可以通过 js 的方式提供动态假数据。，动态数据本质是 express 的 route.</p>
+</blockquote>
+<p><code>rewrite ^\/api\/dynamic\/time$ /mock/dynamic.js</code></p>
+<p><figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="comment">// dynamic.js内容</span></span><br><span class="line"><span class="built_in">module</span>.exports = <span class="function"><span class="keyword">function</span>(<span class="params">req, res, next</span>) </span>&#123;</span><br><span class="line"></span><br><span class="line">  res.write(<span class="string">'Hello world '</span>);</span><br><span class="line"></span><br><span class="line">  <span class="comment">// set custom header.</span></span><br><span class="line">  <span class="comment">// res.setHeader('xxxx', 'xxx');</span></span><br><span class="line"></span><br><span class="line">  res.end(<span class="string">'The time is '</span> + <span class="built_in">Date</span>.now());</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 更复杂的，可以直接引用其他模块，发送请求</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> http = <span class="built_in">require</span>(<span class="string">'http'</span>);</span><br><span class="line"><span class="keyword">var</span> url = <span class="built_in">require</span>(<span class="string">'url'</span>);</span><br><span class="line"><span class="keyword">var</span> util = <span class="built_in">require</span>(<span class="string">'util'</span>);</span><br><span class="line"><span class="keyword">var</span> querystring = <span class="built_in">require</span>(<span class="string">'querystring'</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 通过nodejs来抓取线上的结果。这样就完成了动态获取线上数据的功能</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">module</span>.exports = <span class="function"><span class="keyword">function</span>(<span class="params">request, response, next</span>) </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">var</span> method = request.method;</span><br><span class="line">    ...</span><br><span class="line"></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<h4 id="proxy-到其他服务的-api-地址"><a class="markdown-anchor" href="#proxy-到其他服务的-api-地址">#</a> proxy 到其他服务的 api 地址</h4>
+<p><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">// 支持正则分组</span><br><span class="line">proxy ^\/wmall\/privilege\/(.*)$  http://10.19.161.92:8059/wmall/privilege/<span class="variable">$1</span></span><br></pre></td></tr></table></figure></p>
+<h3 id="ral-请求的mock"><a class="markdown-anchor" href="#ral-请求的mock">#</a> ral 请求的mock</h3>
+<p>主要是Node向下游服务(PHP)请求的数据mock，基于ral请求的数据模拟。</p>
+<h4 id="如何使用"><a class="markdown-anchor" href="#如何使用">#</a> 如何使用</h4>
+<h5 id="1-根据path-建立mock文件"><a class="markdown-anchor" href="#1-根据path-建立mock文件">#</a> 1. 根据path 建立mock文件</h5>
+<p>文件命名规则是 <em>请求的path用-符号连接</em></p>
+<pre><code>/huodong/gamebase -&gt;  huodong-gamebase.js
+</code></pre>
+<p>path与文件名的映射关系必须按照上面的要求，否则无法mock。</p>
+<h5 id="2-开启mock"><a class="markdown-anchor" href="#2-开启mock">#</a> 2. 开启mock</h5>
+<p>比如我们有这样的一个请求：</p>
+<p><figure class="highlight js"><table><tr><td class="code"><pre><span class="line">getData: <span class="function"><span class="keyword">function</span>(<span class="params">req, tools, params</span>) </span>&#123;</span><br><span class="line">    <span class="keyword">var</span> options = &#123;</span><br><span class="line">        data: params || &#123;&#125;,</span><br><span class="line">        path: <span class="string">'/huodong/gamebase'</span>,</span><br><span class="line">        reqType: <span class="string">'promise'</span></span><br><span class="line">    &#125;;</span><br><span class="line">    <span class="keyword">return</span> tools.commonBusiness.pierce(req, <span class="string">'SHOPUI'</span>, options);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>mock文件夹下面建立一个 <code>huodong-gamebase.js</code>,在请求的参数里面增加 <code>enableMock: true</code>开启mock</p>
+<p><figure class="highlight js"><table><tr><td class="code"><pre><span class="line">getData: <span class="function"><span class="keyword">function</span>(<span class="params">req, tools, params</span>) </span>&#123;</span><br><span class="line">    <span class="keyword">var</span> options = &#123;</span><br><span class="line">        data: params || &#123;&#125;,</span><br><span class="line">        path: <span class="string">'/huodong/gamebase'</span>,</span><br><span class="line">        reqType: <span class="string">'promise'</span>,</span><br><span class="line">        enableMock: <span class="literal">true</span>,<span class="comment">//开启Mock</span></span><br><span class="line">    &#125;;</span><br><span class="line">    <span class="keyword">return</span> tools.commonBusiness.pierce(req, <span class="string">'SHOPUI'</span>, options);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>这样就完成了nodeui向php请求的数据mock</p>
+<h2 id="测试链接"><a class="markdown-anchor" href="#测试链接">#</a> 测试链接</h2>
+<ul>
+<li>ral请求mock: http://127.0.0.1:8197/fly/h5/demo</li>
+<li>普通请求mock(rewrite): http://127.0.0.1:8197/api/user</li>
+<li>动态数据mock(rewrite): http://127.0.0.1:8197/api/dynamic/time</li>
+<li>api proxy mock: http://127.0.0.1:8197/wmall/privilege/center</li>
+<li>重定向(redirect): http://127.0.0.1:8197/api/redirect</li>
+</ul>
+
+  </article>
+  
+  <aside id="mobileAside" class="toc">
+  <div class="mobile-menu">
+    
+    <ul><li><a href="/zh-cn/docs/intro/" alt="应用介绍" class>应用介绍</a></li><li><a href="/zh-cn/page/process.html" alt="开放API" class>开放API</a></li><li><a href="/zh-cn/page/user.html" alt="使用案例" class>使用案例</a></li><li><a href="/zh-cn/fekey/index.html" alt="加入我们" class>加入我们</a></li></ul>
+  </div>
+  <dl><dt>新手指南</dt><dd><ul><li><a href="/zh-cn/docs/intro/index.html" class>NodeUI 是什么</a></li><li><a href="/zh-cn/docs/intro/quickstart.html" class>快速入门</a></li></ul></dd><dt>基础功能</dt><dd><ul><li><a href="/zh-cn/docs/basics/structure.html" class>目录结构</a></li><li><a href="/zh-cn/docs/basics/router.html" class>路由</a></li><li><a href="/zh-cn/docs/basics/service.html" class>Service</a></li><li><a href="/zh-cn/docs/basics/mock.html" class="cur">数据模拟</a></li></ul></dd><dt>核心功能</dt><dd><ul><li><a href="/zh-cn/docs/core/development.html" class>本地开发</a></li><li><a href="/zh-cn/docs/core/deployment.html" class>应用部署</a></li><li><a href="/zh-cn/docs/core/logger.html" class>日志</a></li><li><a href="/zh-cn/docs/core/view.html" class>模板渲染</a></li><li><a href="/zh-cn/docs/core/runtime.html" class>Runtime</a></li></ul></dd><dt>进阶</dt><dd><ul><li><a href="/zh-cn/docs/advanced/fetch-server.html" class>负载均衡</a></li><li><a href="/zh-cn/docs/advanced/server-isoloton.html" class>服务隔离</a></li></ul></dd><dt>常见问题</dt><dd><ul><li><a href="/zh-cn/docs/faq/deploy.html" class>部署问题</a></li><li><a href="/zh-cn/docs/faq/debug.html" class>Node调试</a></li><li><a href="/zh-cn/docs/faq/wechat.html" class>微信授权</a></li><li><a href="/zh-cn/docs/faq/contributing.html" class>贡献文章</a></li></ul></dd></dl>
+</aside>
+<script src="/js/mobile-aside.js"></script>
+
+</div>
+
+  </div>
+</body>
+<!-- <script src="https://cdn.jsdelivr.net/docsearch.js/2/docsearch.min.js"></script>
+<script> 
+docsearch({
+  apiKey: '1561de31a86f79507ea00cdb54ce647c',
+  indexName: 'eggjs',
+  inputSelector: '#search-query',
+  // debug: true // Set debug to true if you want to inspect the dropdown
+});
+</script> -->
+</html>

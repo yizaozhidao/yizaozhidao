@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <title>View 模板渲染 </title>
+<meta charset="utf-8">
+<meta name="description" content>
+<meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="icon" href="/images/favicon.png" type="image/x-icon">
+
+
+<link rel="stylesheet" href="/css/index.css">
+
+
+
+
+</head>
+<body>
+  <div class="nav">
+  <header>
+    <a href="/zh-cn/" class="nav-logo" alt="nodeui">
+    <img src="/images/logo.png" width="89"><span>益早知道</span>
+    </a>
+    <ul class="nav-item">
+      <li>
+        <form id="search-form">
+          <input type="text" id="search-query" class="search-query st-default-search-input">
+        </form>
+      </li>
+      <li><a href="/zh-cn/docs/intro/" alt="应用介绍" class>应用介绍</a></li><li><a href="/zh-cn/page/process.html" alt="开放API" class>开放API</a></li><li><a href="/zh-cn/page/user.html" alt="使用案例" class>使用案例</a></li><li><a href="/zh-cn/fekey/index.html" alt="加入我们" class>加入我们</a></li>
+
+      
+      
+      
+      
+    </ul>
+    <a id="mobileTrigger" href="#" class="mobile-trigger">
+      <ul>
+        <li></li>
+        <li></li>
+        <li></li>
+      </ul>
+    </a>
+  </header>
+</div>
+
+  <div id="container">
+    <div class="page-main">
+  <article class="markdown-body">
+    <h1>View 模板渲染</h1>
+    <p>绝大多数情况，我们都需要读取数据后渲染模板，然后呈现给用户。故我们需要引入对应的模板引擎。</p>
+<p>我们通过扩展 swig 后端模板引擎，来添加对资源的加载能力。</p>
+<h3 id="基础结构"><a class="markdown-anchor" href="#基础结构">#</a> 基础结构</h3>
+<p>一个基础的后端模板应该类似</p>
+<p><figure class="highlight html"><table><tr><td class="code"><pre><span class="line"><span class="meta">&lt;!doctype html&gt;</span></span><br><span class="line">&#123;% html framework="home:static/js/mod.js" %&#125;</span><br><span class="line">    &#123;% head %&#125;</span><br><span class="line">        <span class="tag">&lt;<span class="name">title</span>&gt;</span>Hello World<span class="tag">&lt;/<span class="name">title</span>&gt;</span></span><br><span class="line">    &#123;% endhead %&#125;</span><br><span class="line">    &#123;% body %&#125;</span><br><span class="line">    &#123;% endbody %&#125;</span><br><span class="line">&#123;% endhtml %&#125;</span><br></pre></td></tr></table></figure></p>
+<p>可以将这种基础结构设置为母版页 <code>layout.tpl</code> 这样就不需要重复的编写 <code>html</code> <code>head</code> <code>body</code> 标签。</p>
+<p>其中 <code>html</code> 标签的 <code>framework</code> 属性是一个特殊属性，用于指定模块化加载类库 <code>mod.js</code> 所在的路径。</p>
+<h3 id="引用非模块化资源"><a class="markdown-anchor" href="#引用非模块化资源">#</a> 引用非模块化资源</h3>
+<p>如果希望引入非模块化资源，比如一些第三方库类似 <code>jquery</code> , <code>zepto</code> 等等，可以直接通过 <code>require</code> 标签进行引用，也可以直接编写 <code>&lt;script&gt;&lt;/script&gt;</code> HTML标签进行引用。</p>
+<p><figure class="highlight html"><table><tr><td class="code"><pre><span class="line"><span class="meta">&lt;!doctype html&gt;</span></span><br><span class="line">&#123;% html framework="home:static/js/mod.js" %&#125;</span><br><span class="line">    &#123;% head %&#125;</span><br><span class="line">        <span class="tag">&lt;<span class="name">title</span>&gt;</span>Hello World<span class="tag">&lt;/<span class="name">title</span>&gt;</span></span><br><span class="line">        &#123;% require "home:static/lib/jquery.js" %&#125;</span><br><span class="line">        <span class="tag">&lt;<span class="name">script</span> <span class="attr">src</span>=<span class="string">"/client/static/lib/zepto.js"</span> &gt;</span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line">    &#123;% endhead %&#125;</span><br><span class="line">    &#123;% body %&#125;</span><br><span class="line">    &#123;% endbody %&#125;</span><br><span class="line">&#123;% endhtml %&#125;</span><br></pre></td></tr></table></figure></p>
+<p>两种引用方式都可以生效，但是更加推荐使用 <code>require</code> 标签，因此这种依赖声明模式是运行时声明的，你可以通过 <code>if</code> <code>endif</code>标签来实现后端动态化的资源加载。此外使用 <code>require</code> 加载的资源，可以被 fis 的静态资源管理层统一管理，而 <code>&lt;script&gt;</code> 标签加载的资源就类似传统的编写方式，fis 并不会在打包合并等操作时调整它。</p>
+<h3 id="引用模块化资源"><a class="markdown-anchor" href="#引用模块化资源">#</a> 引用模块化资源</h3>
+<p>模块化资源是指 <code>widget</code> 目录下的所有脚本资源，引用模块化资源分为同步引用和异步引用两种方式，但是两种方式都是按需加载，异步引用的区别是不会在页面加载的时候就将资源加载，而是会在执行到异步加载命令时进行资源加载。</p>
+<p>同步引用模块化资源的方式符合 CommonJS 规范</p>
+<p>在其他脚本中</p>
+<p><figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 使用资源ID引用，资源ID为去掉 /client 目录层级的路径并添加当前项目的命名空间</span></span><br><span class="line"><span class="keyword">var</span> <span class="built_in">module</span> = <span class="built_in">require</span>(<span class="string">'home:widget/search/search.js'</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 使用相对路径引用，相对路径需要按照源代码实际路径情况编写</span></span><br><span class="line"><span class="built_in">module</span> = <span class="built_in">require</span>(<span class="string">'./search.js'</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 使用绝对路径引用，需要以项目根目录计算路径</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">module</span> = <span class="built_in">require</span>(<span class="string">'/client/widget/search/search.js'</span>);</span><br></pre></td></tr></table></figure></p>
+<p>异步引用模块化资源时，资源的引用规则还是保持一致，不同的是引用接口发生了变化</p>
+<p><figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 使用资源ID引用，资源ID为去掉 /client 目录层级的路径并添加当前项目的命名空间</span></span><br><span class="line"><span class="built_in">require</span>.async([<span class="string">'home:widget/search/search.js'</span>], <span class="function"><span class="keyword">function</span> (<span class="params">module</span>) </span>&#123;</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 使用相对路径引用，相对路径需要按照源代码实际路径情况编写</span></span><br><span class="line"><span class="built_in">require</span>.async([<span class="string">'./search.js'</span>], <span class="function"><span class="keyword">function</span> (<span class="params">module</span>) </span>&#123;</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 使用绝对路径引用，需要以项目根目录计算路径</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">require</span>.async([<span class="string">'/client/widget/search/search.js'</span>], <span class="function"><span class="keyword">function</span> (<span class="params">module</span>) </span>&#123;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure></p>
+<h3 id="内联脚本"><a class="markdown-anchor" href="#内联脚本">#</a> 内联脚本</h3>
+<p>无论是页面中还是组件中，如果希望编写内联脚本，除非不希望被 fis 的静态资源管理层管理，否则需要使用 <code>script</code> 标签</p>
+<p><figure class="highlight js"><table><tr><td class="code"><pre><span class="line">&#123;% script %&#125;</span><br><span class="line"><span class="built_in">console</span>.log(<span class="string">'inline script'</span>);</span><br><span class="line">&#123;% endscript %&#125;</span><br></pre></td></tr></table></figure></p>
+<p>通过 <code>script</code> 标签包裹的内联脚本会在输出时，保证输出到静态资源加载之后，避免内联脚本在依赖的资源未加载时就提前执行了。</p>
+<h3 id="编写后端组件"><a class="markdown-anchor" href="#编写后端组件">#</a> 编写后端组件</h3>
+<p>后端组件用于将一个复杂的站点按照功能区域划分为多个组件，来降低站点的复杂度。并且在 YOG2 中，后端组件可以将 JavaScript脚本、CSS层叠样式、TPL 后端模板统一管理，这样在维护时可以轻松的根据功能点寻找到相应的代码，而无需分别在三类代码中去寻找相应的功能点。</p>
+<p><figure class="highlight html"><table><tr><td class="code"><pre><span class="line"><span class="comment">&lt;!-- /client/widget/search.tpl --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">ul</span> <span class="attr">id</span>=<span class="string">'&#123;&#123; poiListID &#125;&#125;'</span> <span class="attr">class</span>=<span class="string">"poi-list"</span>&gt;</span></span><br><span class="line">    &#123;% for poi in pois %&#125;</span><br><span class="line">    <span class="tag">&lt;<span class="name">li</span> <span class="attr">data-tel</span>=<span class="string">"&#123;&#123; poi.telephone &#125;&#125;"</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">span</span>&gt;</span>&#123;&#123; poi.name &#125;&#125;<span class="tag">&lt;/<span class="name">span</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">li</span>&gt;</span></span><br><span class="line">    &#123;% endfor %&#125;</span><br><span class="line"><span class="tag">&lt;/<span class="name">ul</span>&gt;</span></span><br><span class="line"><span class="comment">&lt;!-- 组件的脚本初始化入口 --&gt;</span></span><br><span class="line">&#123;% script %&#125;</span><br><span class="line"><span class="comment">&lt;!-- 获取search.js --&gt;</span></span><br><span class="line">require("./search.js').init('&#123;&#123; poiListID &#125;&#125;');</span><br><span class="line">&#123;% endscript %&#125;</span><br><span class="line"><span class="comment">&lt;!-- 声明加载search.less --&gt;</span></span><br><span class="line">&#123;% require "./search.less" %&#125;</span><br></pre></td></tr></table></figure></p>
+<p><figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="comment">// /client/widget/search.js</span></span><br><span class="line"><span class="built_in">module</span>.exports.init = <span class="function"><span class="keyword">function</span> (<span class="params">target</span>) </span>&#123;</span><br><span class="line">    $(target).find(<span class="string">'li'</span>).click(<span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">        alert(<span class="string">'tel: '</span> + $(<span class="keyword">this</span>).attr(<span class="string">'data-tel'</span>));</span><br><span class="line">    &#125;);</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p><figure class="highlight css"><table><tr><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">/client/widget/search.less</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">**/</span></span><br><span class="line"><span class="selector-class">.poi-list</span> &#123;</span><br><span class="line">      <span class="attribute">list-style-type</span>: none;</span><br><span class="line">      </span><br><span class="line">      &gt; li &#123;</span><br><span class="line">          <span class="selector-tag">margin</span>: 0 5<span class="selector-tag">px</span>;</span><br><span class="line">      &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>编写完成的后端组件一般就是一个独立的功能组件，我们可以直接在页面中引用而无需担心各种依赖问题。</p>
+<p><figure class="highlight html"><table><tr><td class="code"><pre><span class="line"><span class="comment">&lt;!-- /client/page/index.tpl --&gt;</span></span><br><span class="line"><span class="meta">&lt;!doctype html&gt;</span></span><br><span class="line">&#123;% html framework="home:static/js/mod.js" %&#125;</span><br><span class="line">    &#123;% head %&#125;</span><br><span class="line">        <span class="tag">&lt;<span class="name">title</span>&gt;</span>Hello World<span class="tag">&lt;/<span class="name">title</span>&gt;</span></span><br><span class="line">    &#123;% endhead %&#125;</span><br><span class="line">    &#123;% body %&#125;</span><br><span class="line">        &#123;% widget "home:widget/search/search.tpl" %&#125;</span><br><span class="line">    &#123;% endbody %&#125;</span><br><span class="line">&#123;% endhtml %&#125;</span><br></pre></td></tr></table></figure></p>
+<p>后端组件也可以使用独立与页面渲染不同的数据进行渲染，类似 Swig 的 include 语法，我们可以使用 with 参数为 widget 添加渲染参数。</p>
+<p><figure class="highlight html"><table><tr><td class="code"><pre><span class="line">&#123;% set data = &#123;&#125; %&#125;</span><br><span class="line">&#123;% set data['a'] = 1 %&#125;</span><br><span class="line">&#123;% set data['b'] = "hello world" %&#125;</span><br><span class="line">&#123;% set data['c'] = title // 原始渲染数据的中的值 %&#125;</span><br><span class="line"></span><br><span class="line">// 将在现有页面渲染数据的基础上添加data中的 a, b, c 值进行渲染</span><br><span class="line">&#123;% widget "home:widget/search/search.tpl" with data %&#125; </span><br><span class="line"></span><br><span class="line">// 仅使用data中的值进行渲染</span><br><span class="line">&#123;% widget "home:widget/search/search.tpl" with data only %&#125; </span><br><span class="line"></span><br><span class="line">// 快速赋值，无需预先 set</span><br><span class="line">&#123;% widget "home:widget/search/search.tpl" with &#123;a=1, b="hello world", c=title&#125; %&#125; </span><br><span class="line"></span><br><span class="line">// 也兼容 only 参数</span><br><span class="line">&#123;% widget "home:widget/search/search.tpl" with &#123;a=1, b="hello world", c=title&#125; only%&#125;</span><br></pre></td></tr></table></figure></p>
+
+  </article>
+  
+  <aside id="mobileAside" class="toc">
+  <div class="mobile-menu">
+    
+    <ul><li><a href="/zh-cn/docs/intro/" alt="应用介绍" class>应用介绍</a></li><li><a href="/zh-cn/page/process.html" alt="开放API" class>开放API</a></li><li><a href="/zh-cn/page/user.html" alt="使用案例" class>使用案例</a></li><li><a href="/zh-cn/fekey/index.html" alt="加入我们" class>加入我们</a></li></ul>
+  </div>
+  <dl><dt>新手指南</dt><dd><ul><li><a href="/zh-cn/docs/intro/index.html" class>NodeUI 是什么</a></li><li><a href="/zh-cn/docs/intro/quickstart.html" class>快速入门</a></li></ul></dd><dt>基础功能</dt><dd><ul><li><a href="/zh-cn/docs/basics/structure.html" class>目录结构</a></li><li><a href="/zh-cn/docs/basics/router.html" class>路由</a></li><li><a href="/zh-cn/docs/basics/service.html" class>Service</a></li><li><a href="/zh-cn/docs/basics/mock.html" class>数据模拟</a></li></ul></dd><dt>核心功能</dt><dd><ul><li><a href="/zh-cn/docs/core/development.html" class>本地开发</a></li><li><a href="/zh-cn/docs/core/deployment.html" class>应用部署</a></li><li><a href="/zh-cn/docs/core/logger.html" class>日志</a></li><li><a href="/zh-cn/docs/core/view.html" class="cur">模板渲染</a></li><li><a href="/zh-cn/docs/core/runtime.html" class>Runtime</a></li></ul></dd><dt>进阶</dt><dd><ul><li><a href="/zh-cn/docs/advanced/fetch-server.html" class>负载均衡</a></li><li><a href="/zh-cn/docs/advanced/server-isoloton.html" class>服务隔离</a></li></ul></dd><dt>常见问题</dt><dd><ul><li><a href="/zh-cn/docs/faq/deploy.html" class>部署问题</a></li><li><a href="/zh-cn/docs/faq/debug.html" class>Node调试</a></li><li><a href="/zh-cn/docs/faq/wechat.html" class>微信授权</a></li><li><a href="/zh-cn/docs/faq/contributing.html" class>贡献文章</a></li></ul></dd></dl>
+</aside>
+<script src="/js/mobile-aside.js"></script>
+
+</div>
+
+  </div>
+</body>
+<!-- <script src="https://cdn.jsdelivr.net/docsearch.js/2/docsearch.min.js"></script>
+<script> 
+docsearch({
+  apiKey: '1561de31a86f79507ea00cdb54ce647c',
+  indexName: 'eggjs',
+  inputSelector: '#search-query',
+  // debug: true // Set debug to true if you want to inspect the dropdown
+});
+</script> -->
+</html>

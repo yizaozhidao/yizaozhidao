@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <title>Node.js调试 </title>
+<meta charset="utf-8">
+<meta name="description" content>
+<meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="icon" href="/images/favicon.png" type="image/x-icon">
+
+
+<link rel="stylesheet" href="/css/index.css">
+
+
+
+
+</head>
+<body>
+  <div class="nav">
+  <header>
+    <a href="/zh-cn/" class="nav-logo" alt="nodeui">
+    <img src="/images/logo.png" width="89"><span>益早知道</span>
+    </a>
+    <ul class="nav-item">
+      <li>
+        <form id="search-form">
+          <input type="text" id="search-query" class="search-query st-default-search-input">
+        </form>
+      </li>
+      <li><a href="/zh-cn/docs/intro/" alt="应用介绍" class>应用介绍</a></li><li><a href="/zh-cn/page/process.html" alt="开放API" class>开放API</a></li><li><a href="/zh-cn/page/user.html" alt="使用案例" class>使用案例</a></li><li><a href="/zh-cn/fekey/index.html" alt="加入我们" class>加入我们</a></li>
+
+      
+      
+      
+      
+    </ul>
+    <a id="mobileTrigger" href="#" class="mobile-trigger">
+      <ul>
+        <li></li>
+        <li></li>
+        <li></li>
+      </ul>
+    </a>
+  </header>
+</div>
+
+  <div id="container">
+    <div class="page-main">
+  <article class="markdown-body">
+    <h1>Node.js调试</h1>
+    <h2 id="线下调试"><a class="markdown-anchor" href="#线下调试">#</a> 线下调试</h2>
+<h3 id="需求"><a class="markdown-anchor" href="#需求">#</a> 需求</h3>
+<ul>
+<li>http请求断点调试</li>
+<li>node-ral 向后请求查看</li>
+<li>启动调试</li>
+</ul>
+<h2 id="版本"><a class="markdown-anchor" href="#版本">#</a> 版本</h2>
+<pre><code>node v4.2.4
+Node Inspector v0.12.5
+</code></pre>
+<h2 id="node-inspector"><a class="markdown-anchor" href="#node-inspector">#</a> node-inspector</h2>
+<p><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">npm i -g node-inspector</span><br><span class="line"></span><br><span class="line">npm run debug(node --debug app.js)</span><br><span class="line"></span><br><span class="line">node-inspector --web-port=5006</span><br></pre></td></tr></table></figure></p>
+<blockquote>
+<p>建议配合 <code>supervisor</code> 使用,支持node 自动重启。</p>
+</blockquote>
+<h2 id="devtool"><a class="markdown-anchor" href="#devtool">#</a> devtool</h2>
+<blockquote>
+<p>建议大家尝试，取代node-inspector</p>
+</blockquote>
+<pre><code>https://github.com/Jam3/devtool
+</code></pre>
+<h2 id="线上日志"><a class="markdown-anchor" href="#线上日志">#</a> 线上—日志</h2>
+<pre><code>线上通过日志排查 access nodeui等
+</code></pre>
+<h2 id="远程调试"><a class="markdown-anchor" href="#远程调试">#</a> 远程调试</h2>
+<h2 id="错误捕获"><a class="markdown-anchor" href="#错误捕获">#</a> 错误捕获</h2>
+<p><figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="meta">'use strict'</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> Http = <span class="built_in">require</span>(<span class="string">'http'</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> server = Http.createServer(<span class="function">(<span class="params">req, res</span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">const</span> promise = <span class="keyword">new</span> <span class="built_in">Promise</span>(<span class="function">(<span class="params">resolve, reject</span>) =&gt;</span> &#123;</span><br><span class="line">    <span class="keyword">let</span> result = <span class="string">''</span>;</span><br><span class="line">    req.on(<span class="string">'data'</span>, (data) =&gt; &#123;</span><br><span class="line">      result += data;</span><br><span class="line">    &#125;);</span><br><span class="line"></span><br><span class="line">    req.once(<span class="string">'end'</span>, () =&gt; &#123;</span><br><span class="line">      <span class="keyword">const</span> obj = <span class="built_in">JSON</span>.parse(result);</span><br><span class="line">      resolve(obj);</span><br><span class="line">    &#125;);</span><br><span class="line">  &#125;);</span><br><span class="line"></span><br><span class="line">  promise.then(<span class="function">(<span class="params">obj</span>) =&gt;</span> &#123;</span><br><span class="line">    res.writeHead(<span class="number">200</span>);</span><br><span class="line">    <span class="comment">// 这里会报错</span></span><br><span class="line">    res.end(obj.foo.bar);</span><br><span class="line">  &#125;).catch(<span class="function">(<span class="params">reason</span>) =&gt;</span> &#123;</span><br><span class="line">    res.writeHead(<span class="number">500</span>);</span><br><span class="line">    res.end();</span><br><span class="line">    <span class="built_in">console</span>.error(reason);</span><br><span class="line">    <span class="comment">// 抛错后退出程序</span></span><br><span class="line">    process.abort()</span><br><span class="line">  &#125;);</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line">server.listen(<span class="number">8080</span>, () =&gt; &#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">'listening at http://localhost:8080'</span>);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure></p>
+<pre><code>// post请求
+curl -X POST http://localhost:8080 -d '{&quot;Hi&quot;: &quot;world&quot;}'</code></pre>
+
+  </article>
+  
+  <aside id="mobileAside" class="toc">
+  <div class="mobile-menu">
+    
+    <ul><li><a href="/zh-cn/docs/intro/" alt="应用介绍" class>应用介绍</a></li><li><a href="/zh-cn/page/process.html" alt="开放API" class>开放API</a></li><li><a href="/zh-cn/page/user.html" alt="使用案例" class>使用案例</a></li><li><a href="/zh-cn/fekey/index.html" alt="加入我们" class>加入我们</a></li></ul>
+  </div>
+  <dl><dt>新手指南</dt><dd><ul><li><a href="/zh-cn/docs/intro/index.html" class>NodeUI 是什么</a></li><li><a href="/zh-cn/docs/intro/quickstart.html" class>快速入门</a></li></ul></dd><dt>基础功能</dt><dd><ul><li><a href="/zh-cn/docs/basics/structure.html" class>目录结构</a></li><li><a href="/zh-cn/docs/basics/router.html" class>路由</a></li><li><a href="/zh-cn/docs/basics/service.html" class>Service</a></li><li><a href="/zh-cn/docs/basics/mock.html" class>数据模拟</a></li></ul></dd><dt>核心功能</dt><dd><ul><li><a href="/zh-cn/docs/core/development.html" class>本地开发</a></li><li><a href="/zh-cn/docs/core/deployment.html" class>应用部署</a></li><li><a href="/zh-cn/docs/core/logger.html" class>日志</a></li><li><a href="/zh-cn/docs/core/view.html" class>模板渲染</a></li><li><a href="/zh-cn/docs/core/runtime.html" class>Runtime</a></li></ul></dd><dt>进阶</dt><dd><ul><li><a href="/zh-cn/docs/advanced/fetch-server.html" class>负载均衡</a></li><li><a href="/zh-cn/docs/advanced/server-isoloton.html" class>服务隔离</a></li></ul></dd><dt>常见问题</dt><dd><ul><li><a href="/zh-cn/docs/faq/deploy.html" class>部署问题</a></li><li><a href="/zh-cn/docs/faq/debug.html" class="cur">Node调试</a></li><li><a href="/zh-cn/docs/faq/wechat.html" class>微信授权</a></li><li><a href="/zh-cn/docs/faq/contributing.html" class>贡献文章</a></li></ul></dd></dl>
+</aside>
+<script src="/js/mobile-aside.js"></script>
+
+</div>
+
+  </div>
+</body>
+<!-- <script src="https://cdn.jsdelivr.net/docsearch.js/2/docsearch.min.js"></script>
+<script> 
+docsearch({
+  apiKey: '1561de31a86f79507ea00cdb54ce647c',
+  indexName: 'eggjs',
+  inputSelector: '#search-query',
+  // debug: true // Set debug to true if you want to inspect the dropdown
+});
+</script> -->
+</html>

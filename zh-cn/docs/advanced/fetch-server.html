@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <title>NodeUI与PHP服务通信负载均衡策略 </title>
+<meta charset="utf-8">
+<meta name="description" content>
+<meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="icon" href="/images/favicon.png" type="image/x-icon">
+
+
+<link rel="stylesheet" href="/css/index.css">
+
+
+
+
+</head>
+<body>
+  <div class="nav">
+  <header>
+    <a href="/zh-cn/" class="nav-logo" alt="nodeui">
+    <img src="/images/logo.png" width="89"><span>益早知道</span>
+    </a>
+    <ul class="nav-item">
+      <li>
+        <form id="search-form">
+          <input type="text" id="search-query" class="search-query st-default-search-input">
+        </form>
+      </li>
+      <li><a href="/zh-cn/docs/intro/" alt="应用介绍" class>应用介绍</a></li><li><a href="/zh-cn/page/process.html" alt="开放API" class>开放API</a></li><li><a href="/zh-cn/page/user.html" alt="使用案例" class>使用案例</a></li><li><a href="/zh-cn/fekey/index.html" alt="加入我们" class>加入我们</a></li>
+
+      
+      
+      
+      
+    </ul>
+    <a id="mobileTrigger" href="#" class="mobile-trigger">
+      <ul>
+        <li></li>
+        <li></li>
+        <li></li>
+      </ul>
+    </a>
+  </header>
+</div>
+
+  <div id="container">
+    <div class="page-main">
+  <article class="markdown-body">
+    <h1>NodeUI与PHP服务通信负载均衡策略</h1>
+    <h3 id="1-roundrobin"><a class="markdown-anchor" href="#1-roundrobin">#</a> 1. roundrobin</h3>
+<p><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">RoundRobinBalance.prototype.fetchServer = function (balanceContext) &#123;</span><br><span class="line">    var servers = balanceContext.reqIDCServers;</span><br><span class="line">    if (servers.length === 1) &#123;</span><br><span class="line">        return servers[0];</span><br><span class="line">    &#125;</span><br><span class="line">    balanceContext.lastRoundRobinID = balanceContext.lastRoundRobinID || 0;</span><br><span class="line">    balanceContext.lastRoundRobinID++;</span><br><span class="line">    if (balanceContext.lastRoundRobinID &lt; 0 || balanceContext.lastRoundRobinID &gt;= servers.length) &#123;</span><br><span class="line">        balanceContext.lastRoundRobinID = 0;</span><br><span class="line">    &#125;</span><br><span class="line">    logger.trace(</span><br><span class="line">        [&apos;RoundRobinBalance fetchServer RoundRobinID=&apos;, balanceContext.lastRoundRobinID, &apos; ServiceID=&apos;,</span><br><span class="line">            balanceContext.serviceID</span><br><span class="line">        ].join(&apos;&apos;)</span><br><span class="line">    );</span><br><span class="line">    return servers[balanceContext.lastRoundRobinID];</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<h3 id="2-random"><a class="markdown-anchor" href="#2-random">#</a> 2. random</h3>
+<p><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">RandomBalance.prototype.fetchServer = function (balanceContext) &#123;</span><br><span class="line">    var servers = balanceContext.reqIDCServers;</span><br><span class="line">    if (servers.length === 1) &#123;</span><br><span class="line">        return servers[0];</span><br><span class="line">    &#125;</span><br><span class="line">    // Math.random takes 250ms on first call</span><br><span class="line">    var index = Math.floor(Math.random() * servers.length);</span><br><span class="line">    logger.trace(&apos;RandomBalance fetchServer index=&apos; + index + &apos; ServiceID=&apos; + balanceContext.serviceID);</span><br><span class="line">    // TODO add server filter</span><br><span class="line">    return servers[index];</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<h3 id="3-hashring"><a class="markdown-anchor" href="#3-hashring">#</a> 3. hashring</h3>
+<p><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">HashringBalance.prototype.fetchServer = function (balanceContext, conf, prevBackend) &#123;</span><br><span class="line">    if (conf.balanceKey === undefined || conf.balanceKey === null) &#123;</span><br><span class="line">        throw new Error(&apos;balanceKey is needed when using consistent hashing&apos;);</span><br><span class="line">    &#125;</span><br><span class="line">    var servers = balanceContext.reqIDCServers;</span><br><span class="line">    if (servers.length === 1) &#123;</span><br><span class="line">        return servers[0];</span><br><span class="line">    &#125;</span><br><span class="line">    if (!balanceContext.hashring) &#123;</span><br><span class="line">        balanceContext.hashring = this.createHashring(balanceContext.reqIDCServers);</span><br><span class="line">    &#125;</span><br><span class="line">    var ringIndex = bs(balanceContext.hashring, &#123;</span><br><span class="line">        index: null,</span><br><span class="line">        value: this.generateHash(conf.balanceKey)</span><br><span class="line">    &#125;, function (a, b) &#123;</span><br><span class="line">        return a.value - b.value;</span><br><span class="line">    &#125;);</span><br><span class="line">    if (ringIndex &lt; 0) &#123;</span><br><span class="line">        ringIndex = -ringIndex - 1;</span><br><span class="line">    &#125;</span><br><span class="line">    ringIndex = Math.min(ringIndex, balanceContext.hashring.length - 1);</span><br><span class="line">    var index = balanceContext.hashring[ringIndex].index;</span><br><span class="line">    logger.trace(&apos;RandomBalance fetchServer index=&apos; + index + &apos; ServiceID=&apos; + balanceContext.serviceID);</span><br><span class="line">    return servers[index];</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+
+  </article>
+  
+  <aside id="mobileAside" class="toc">
+  <div class="mobile-menu">
+    
+    <ul><li><a href="/zh-cn/docs/intro/" alt="应用介绍" class>应用介绍</a></li><li><a href="/zh-cn/page/process.html" alt="开放API" class>开放API</a></li><li><a href="/zh-cn/page/user.html" alt="使用案例" class>使用案例</a></li><li><a href="/zh-cn/fekey/index.html" alt="加入我们" class>加入我们</a></li></ul>
+  </div>
+  <dl><dt>新手指南</dt><dd><ul><li><a href="/zh-cn/docs/intro/index.html" class>NodeUI 是什么</a></li><li><a href="/zh-cn/docs/intro/quickstart.html" class>快速入门</a></li></ul></dd><dt>基础功能</dt><dd><ul><li><a href="/zh-cn/docs/basics/structure.html" class>目录结构</a></li><li><a href="/zh-cn/docs/basics/router.html" class>路由</a></li><li><a href="/zh-cn/docs/basics/service.html" class>Service</a></li><li><a href="/zh-cn/docs/basics/mock.html" class>数据模拟</a></li></ul></dd><dt>核心功能</dt><dd><ul><li><a href="/zh-cn/docs/core/development.html" class>本地开发</a></li><li><a href="/zh-cn/docs/core/deployment.html" class>应用部署</a></li><li><a href="/zh-cn/docs/core/logger.html" class>日志</a></li><li><a href="/zh-cn/docs/core/view.html" class>模板渲染</a></li><li><a href="/zh-cn/docs/core/runtime.html" class>Runtime</a></li></ul></dd><dt>进阶</dt><dd><ul><li><a href="/zh-cn/docs/advanced/fetch-server.html" class="cur">负载均衡</a></li><li><a href="/zh-cn/docs/advanced/server-isoloton.html" class>服务隔离</a></li></ul></dd><dt>常见问题</dt><dd><ul><li><a href="/zh-cn/docs/faq/deploy.html" class>部署问题</a></li><li><a href="/zh-cn/docs/faq/debug.html" class>Node调试</a></li><li><a href="/zh-cn/docs/faq/wechat.html" class>微信授权</a></li><li><a href="/zh-cn/docs/faq/contributing.html" class>贡献文章</a></li></ul></dd></dl>
+</aside>
+<script src="/js/mobile-aside.js"></script>
+
+</div>
+
+  </div>
+</body>
+<!-- <script src="https://cdn.jsdelivr.net/docsearch.js/2/docsearch.min.js"></script>
+<script> 
+docsearch({
+  apiKey: '1561de31a86f79507ea00cdb54ce647c',
+  indexName: 'eggjs',
+  inputSelector: '#search-query',
+  // debug: true // Set debug to true if you want to inspect the dropdown
+});
+</script> -->
+</html>
